@@ -45,6 +45,11 @@ if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
 
     argParser.add_argument("--checkpoint", type=str)
+    argParser.add_argument("--use-gpu", action="store_true")
+    argParser.add_argument("--n-estimators", type=int, default=50)
+    argParser.add_argument("--max-depth", type=int, default=4)
+    argParser.add_argument("--learning-rate", type=float, default=0.1)
+    argParser.add_argument("--n-jobs", type=int, default=2)
 
     args = argParser.parse_args()
 
@@ -78,14 +83,16 @@ if __name__ == "__main__":
 
     print("Training XGBoost...")
     # xgb = xgb.XGBClassifier() ####****#### CHANGE to smaller for testing/temporary
-    xgb = xgb.XGBClassifier(  ####****####
-        n_estimators=50,
-        max_depth=4,
-        learning_rate=0.1,
-        n_jobs=1,
-        random_state=42
+    xgb_model = xgb.XGBClassifier(
+        n_estimators=args.n_estimators,
+        max_depth=args.max_depth,
+        learning_rate=args.learning_rate,
+        n_jobs=args.n_jobs,
+        random_state=42,
+        tree_method="hist",
+        device="cuda" if args.use_gpu else "cpu",
     )
-    xgb.fit(X_train, y_train)
+    xgb_model.fit(X_train, y_train)
     print("Training done.")
 
     # save model
@@ -95,7 +102,7 @@ if __name__ == "__main__":
 
     os.makedirs(ckpt_dir, exist_ok=True)
     with open(model_filename, "wb") as f:
-        pickle.dump(xgb, f)
+        pickle.dump(xgb_model, f)
     
     with open(ds_filename, "wb") as f:
         pickle.dump({

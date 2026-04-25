@@ -1,0 +1,63 @@
+[WARN] Missing matches file for adult_model_10_base
+[WARN] Missing matches file for adult_model_10_adaptive
+Completed detection summary run.
+[WARN] Missing matches file for adult_model_10_base
+[WARN] Missing matches file for adult_model_10_adaptive
+Completed detection summary run.
+Processed 10 files
+Processed 20 files
+Processed 30 files
+Processed 40 files
+Processed 50 files
+Processed 60 files
+Processed 70 files
+Processed 80 files
+Processed 90 files
+Processed 100 files
+Processed 110 files
+Processed 120 files
+Processed 130 files
+Processed 140 files
+Processed 150 files
+Processed 160 files
+Processed 170 files
+Processed 180 files
+Processed 190 files
+Processed 200 files
+Processed 210 files
+Processed 220 files
+Processed 230 files
+Processed 240 files
+Processed 250 files
+Processed 260 files
+Processed 270 files
+Processed 280 files
+Processed 290 files
+Processed 300 files
+Processed 310 files
+Processed 320 files
+Processed 330 files
+Processed 340 files
+Processed 350 files
+Processed 360 files
+Processed 370 files
+Processed 380 files
+Processed 390 files
+Processed 400 files
+Processed 410 files
+Processed 420 files
+Processed 430 files
+Processed 440 files
+Processed 450 files
+Processed 460 files
+Processed 470 files
+Processed 480 files
+Processed 490 files
+Processed 500 files
+Processed 510 files
+Processed 520 files
+Completed detection summary run.
+[WARN] Missing matches file for adult_model_10
+[WARN] Missing matches file for adult_model_adaptive_10
+[WARN] Missing matches file for adult_model_10
+[WARN] Missing matches file for adult_model_adaptive_10

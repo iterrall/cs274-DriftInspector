@@ -1,0 +1,4 @@
+| implementation   | checkpoint              |   total_runtime_sec |   peak_memory_mb |   full_subgroup_count |   effective_monitored_subgroups |   total_artifact_mb |   supwise_file_count |   support_bucket_count |
+|:-----------------|:------------------------|--------------------:|-----------------:|----------------------:|--------------------------------:|--------------------:|---------------------:|-----------------------:|
+| baseline         | adult_model_10          |             17.6529 |          614.469 |                 18543 |                        18543    |             2822.07 |                  403 |                     13 |
+| adaptive         | adult_model_adaptive_10 |            208.799  |          649.707 |                 18543 |                         6514.33 |             1336.29 |                  403 |                     13 |

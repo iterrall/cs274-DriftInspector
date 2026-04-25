@@ -1,0 +1,21 @@
+Processed 25 files
+Processed 50 files
+Processed 75 files
+Processed 100 files
+Processed 125 files
+Processed 150 files
+Processed 175 files
+Processed 200 files
+Processed 225 files
+Processed 250 files
+Processed 275 files
+Processed 300 files
+Processed 325 files
+Processed 350 files
+Processed 375 files
+Processed 400 files
+Processed 425 files
+Processed 450 files
+Processed 475 files
+Processed 500 files
+Completed detection summary run.

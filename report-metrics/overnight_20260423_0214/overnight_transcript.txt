@@ -1,0 +1,132 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260423021436
+Username: ITERRA\terra
+RunAs User: ITERRA\terra
+Configuration Name: 
+Machine: ITERRA (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 3880
+PSVersion: 5.1.26100.8115
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8115
+BuildVersion: 10.0.26100.8115
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is report-metrics\overnight_20260423_0214\overnight_transcript.txt
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "RUNID = $RUNID"
+RUNID = 20260423_0214
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "Output root = $ROOTOUT"
+Output root = report-metrics\overnight_20260423_0214
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> # -------- fresh checkpoint aliases --------
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $BASE_ACTIVE = "adult_model_10_${RUNID}_active_base"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ADAPT_ACTIVE = "adult_model_adaptive_10_${RUNID}_active"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $BASE_STAB = "adult_model_10_${RUNID}_stability_base"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ADAPT_STAB = "adult_model_adaptive_10_${RUNID}_stability"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $BASE_REFRESH = "adult_model_10_${RUNID}_refresh_base"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ADAPT_REFRESH = "adult_model_adaptive_10_${RUNID}_refresh"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> # -------- helper to clone checkpoint family --------
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> function Copy-CheckpointFamily {
+    param(
+        [string]$SrcStem,
+        [string]$DstStem
+    )
+    Copy-Item "models-ckpt\$SrcStem.pkl" "models-ckpt\$DstStem.pkl" -Force
+    Copy-Item "models-ckpt\$SrcStem.dataset.pkl" "models-ckpt\$DstStem.dataset.pkl" -Force
+    Copy-Item "models-ckpt\matches-$SrcStem.pkl" "models-ckpt\matches-$DstStem.pkl" -Force
+}
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> # -------- clone fresh aliases --------
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_10" -DstStem $BASE_ACTIVE
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_adaptive_10" -DstStem $ADAPT_ACTIVE
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_10" -DstStem $BASE_STAB
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_adaptive_10" -DstStem $ADAPT_STAB
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_10" -DstStem $BASE_REFRESH
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_adaptive_10" -DstStem $ADAPT_REFRESH
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> python -m src.runtime_storage_compare --baseline-checkpoint $BASE_ACTIVE --adaptive-checkpoint $ADAPT_ACTIVE --rerun-stage inject --n-targets $NT --noise $NOISE --adaptive-mode active_only --adaptive-top-k 500 --adaptive-interval 5 --adaptive-score abs_tstat --adaptive-min-groups 100 --win-size $WIN --output-dir "$ROOTOUT\runtime_storage_active" 2>&1 | Tee-Object -FilePath "$ROOTOUT\runtime_storage_active.log"; python -m src.runtime_storage_compare --baseline-checkpoint $BASE_STAB --adaptive-checkpoint $ADAPT_STAB --rerun-stage inject --n-targets $NT --noise $NOISE --adaptive-mode stability --adaptive-top-k 500 --adaptive-interval 5 --adaptive-score abs_tstat --adaptive-min-groups 100 --win-size $WIN --stable-score-threshold 0.25 --stable-rounds 2 --output-dir "$ROOTOUT\runtime_storage_stability" 2>&1 | Tee-Object -FilePath "$ROOTOUT\runtime_storage_stability.log"; python -m src.runtime_storage_compare --baseline-checkpoint $BASE_REFRESH --adaptive-checkpoint $ADAPT_REFRESH --rerun-stage inject --n-targets $NT --noise $NOISE --adaptive-mode refresh --adaptive-top-k 500 --adaptive-interval 5 --adaptive-score abs_tstat --adaptive-min-groups 100 --win-size $WIN --stable-score-threshold 0.25 --stable-rounds 2 --refresh-interval 2 --refresh-top-k 100 --output-dir "$ROOTOUT\runtime_storage_refresh" 2>&1 | Tee-Object -FilePath "$ROOTOUT\runtime_storage_refresh.log"; python -m src.ranking_summary --models-ckpt models-ckpt --baseline-checkpoint $BASE_ACTIVE --adaptive-checkpoint $ADAPT_ACTIVE --metric accuracy --win-size $WIN --comparison first_vs_last --max-per-support $NT --methods delta tstat random --output-dir "$ROOTOUT\ranking_active" 2>&1 | Tee-Object -FilePath "$ROOTOUT\ranking_active.log"; python -m src.ranking_summary --models-ckpt models-ckpt --baseline-checkpoint $BASE_STAB --adaptive-checkpoint $ADAPT_STAB --metric accuracy --win-size $WIN --comparison first_vs_last --max-per-support $NT --methods delta tstat random --output-dir "$ROOTOUT\ranking_stability" 2>&1 | Tee-Object -FilePath "$ROOTOUT\ranking_stability.log"; python -m src.ranking_summary --models-ckpt models-ckpt --baseline-checkpoint $BASE_REFRESH --adaptive-checkpoint $ADAPT_REFRESH --metric accuracy --win-size $WIN --comparison first_vs_last --max-per-support $NT --methods delta tstat random --output-dir "$ROOTOUT\ranking_refresh" 2>&1 | Tee-Object -FilePath "$ROOTOUT\ranking_refresh.log"; python -m src.detection_summary --baseline-checkpoint $BASE_ACTIVE --adaptive-checkpoint $ADAPT_ACTIVE --metric accuracy --threshold $THRESH --win-size $WIN --policy max_t --max-per-support $NT --seed $SEED --output-dir "$ROOTOUT\detection_active" 2>&1 | Tee-Object -FilePath "$ROOTOUT\detection_active.log"; python -m src.detection_summary --baseline-checkpoint $BASE_STAB --adaptive-checkpoint $ADAPT_STAB --metric accuracy --threshold $THRESH --win-size $WIN --policy max_t --max-per-support $NT --seed $SEED --output-dir "$ROOTOUT\detection_stability" 2>&1 | Tee-Object -FilePath "$ROOTOUT\detection_stability.log"; python -m src.detection_summary --baseline-checkpoint $BASE_REFRESH --adaptive-checkpoint $ADAPT_REFRESH --metric accuracy --threshold $THRESH --win-size $WIN --policy max_t --max-per-support $NT --seed $SEED --output-dir "$ROOTOUT\detection_refresh" 2>&1 | Tee-Object -FilePath "$ROOTOUT\detection_refresh.log"; Write-Host ""; Write-Host "=== Runtime / Storage: Active ==="; Import-Csv "$ROOTOUT\runtime_storage_active\runtime_storage_compare.csv" | Format-Table implementation,checkpoint,inject_runtime_sec,inject_peak_mb,effective_monitored_subgroups,total_artifact_mb; Write-Host ""; Write-Host "=== Runtime / Storage: Stability ==="; Import-Csv "$ROOTOUT\runtime_storage_stability\runtime_storage_compare.csv" | Format-Table implementation,checkpoint,inject_runtime_sec,inject_peak_mb,effective_monitored_subgroups,total_artifact_mb; Write-Host ""; Write-Host "=== Runtime / Storage: Refresh ==="; Import-Csv "$ROOTOUT\runtime_storage_refresh\runtime_storage_compare.csv" | Format-Table implementation,checkpoint,inject_runtime_sec,inject_peak_mb,effective_monitored_subgroups,total_artifact_mb; Stop-Transcript; Write-Host "Overnight run finished. Results in $ROOTOUT"
+Loaded checkpoint: adult_model_10_20260423_0214_active_base
+Total mined subgroups: 18543
+Support buckets: 13
+Light output: False
+Resume: True
+>> TerminatingError(python.exe): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: System.Management.Automation.RemoteException"
+>> TerminatingError(python.exe): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: System.Management.Automation.RemoteException"
+The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: System.Management.Automation.RemoteException
+python :
+At line:1 char:1
++ python -m src.runtime_storage_compare --baseline-checkpoint $BASE_ACT ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ErrorActionPreference = "Stop"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> cd C:\Users\terra\PycharmProjects\cs274_DriftInspector
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $env:PYTHONPATH = (Get-Location).Path
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $RUNID = Get-Date -Format "yyyyMMdd_HHmm"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ROOTOUT = "report-metrics\overnight_$RUNID"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $NT = 50
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $NOISE = "0.50"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $WIN = 5
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $THRESH = "5.00"   # use 5.00 if you want the strict paper-threshold run instead
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $SEED = 42
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> New-Item -ItemType Directory -Force -Path $ROOTOUT | Out-Null
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Start-Transcript -Path "$ROOTOUT\overnight_transcript.txt" -Force
+Transcript started, output file is report-metrics\overnight_20260423_0245\overnight_transcript.txt
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "RUNID = $RUNID"
+RUNID = 20260423_0245
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "Output root = $ROOTOUT"
+Output root = report-metrics\overnight_20260423_0245
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> # -------- fresh checkpoint aliases --------
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $BASE_ACTIVE = "adult_model_10_${RUNID}_active_base"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ADAPT_ACTIVE = "adult_model_adaptive_10_${RUNID}_active"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $BASE_STAB = "adult_model_10_${RUNID}_stability_base"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ADAPT_STAB = "adult_model_adaptive_10_${RUNID}_stability"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $BASE_REFRESH = "adult_model_10_${RUNID}_refresh_base"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> $ADAPT_REFRESH = "adult_model_adaptive_10_${RUNID}_refresh"
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> # -------- helper to clone checkpoint family --------
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> function Copy-CheckpointFamily {
+param(
+[string]$SrcStem,
+[string]$DstStem
+)
+Copy-Item "models-ckpt\$SrcStem.pkl" "models-ckpt\$DstStem.pkl" -Force
+Copy-Item "models-ckpt\$SrcStem.dataset.pkl" "models-ckpt\$DstStem.dataset.pkl" -Force
+Copy-Item "models-ckpt\matches-$SrcStem.pkl" "models-ckpt\matches-$DstStem.pkl" -Force
+}
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_10" -DstStem $BASE_ACTIVE
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_adaptive_10" -DstStem $ADAPT_ACTIVE
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_10" -DstStem $BASE_STAB
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_adaptive_10" -DstStem $ADAPT_STAB
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_10" -DstStem $BASE_REFRESH
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Copy-CheckpointFamily -SrcStem "adult_model_adaptive_10" -DstStem $ADAPT_REFRESH
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> python -m src.runtime_storage_compare `
+--baseline-checkpoint $BASE_ACTIVE `
+--adaptive-checkpoint $ADAPT_ACTIVE `
+--rerun-stage inject `
+--n-targets $NT `
+--noise $NOISE `
+--adaptive-mode active_only `
+--adaptive-top-k 500 `
+--adaptive-interval 5 `
+--adaptive-score abs_tstat `
+--adaptive-min-groups 100 `
+--win-size $WIN `
+--output-dir "$ROOTOUT\runtime_storage_active" `
+2>&1 | Tee-Object -FilePath "$ROOTOUT\runtime_storage_active.log"
+Loaded checkpoint: adult_model_10_20260423_0245_active_base
+Total mined subgroups: 18543
+Support buckets: 13
+Light output: False
+Resume: True
+>> TerminatingError(python.exe): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: System.Management.Automation.RemoteException"
+>> TerminatingError(python.exe): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: System.Management.Automation.RemoteException"
+The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: System.Management.Automation.RemoteException
+python :
+At line:1 char:1
++ python -m src.runtime_storage_compare `
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+

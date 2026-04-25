@@ -1,0 +1,53 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260423024632
+Username: ITERRA\terra
+RunAs User: ITERRA\terra
+Configuration Name: 
+Machine: ITERRA (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 26324
+PSVersion: 5.1.26100.8115
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8115
+BuildVersion: 10.0.26100.8115
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is report-metrics\overnight_20260423_0246\overnight_transcript.txt
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "RUNID = $RUNID"
+RUNID = 20260423_0246
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "Output root = $ROOTOUT"
+Output root = report-metrics\overnight_20260423_0246
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> Write-Host "Output root = $ROOTOUT"
+Output root = report-metrics\overnight_20260423_0246
+PS C:\Users\terra\PycharmProjects\cs274_DriftInspector> python -m src.runtime_storage_compare `
+--baseline-checkpoint $BASE_STAB `
+--adaptive-checkpoint $ADAPT_STAB `
+--rerun-stage inject `
+--n-targets $NT `
+--noise $NOISE `
+--adaptive-mode stability `
+--adaptive-top-k 500 `
+--adaptive-interval 5 `
+--adaptive-score abs_tstat `
+--adaptive-min-groups 100 `
+--win-size $WIN `
+--stable-score-threshold 0.25 `
+--stable-rounds 2 `
+--output-dir "$ROOTOUT\runtime_storage_stability" `
+2>&1 | Tee-Object -FilePath "$ROOTOUT\runtime_storage_stability.log"
+>> TerminatingError(python.exe): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: usage: runtime_storage_compare.py [-h] [--project-root PROJECT_ROOT]"
+>> TerminatingError(python.exe): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: usage: runtime_storage_compare.py [-h] [--project-root PROJECT_ROOT]"
+The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: usage: runtime_storage_compare.py [-h] [--project-root PROJECT_ROOT]
+python : usage: runtime_storage_compare.py [-h] [--project-root
+PROJECT_ROOT]
+At line:1 char:1
++ python -m src.runtime_storage_compare `
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (usage: runtime_...t PROJECT_RO
+   OT]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+

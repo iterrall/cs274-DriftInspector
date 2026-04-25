@@ -29,7 +29,6 @@ if __name__ == "__main__":
 
     args = argParser.parse_args()
 
-
     model_filename = os.path.join(ckpt_dir, f"{args.checkpoint}.pkl")
     ds_filename = os.path.join(ckpt_dir, f"{args.checkpoint}.dataset.pkl")
     matches_filename = os.path.join(ckpt_dir, f"matches-{args.checkpoint}.pkl")
@@ -39,7 +38,8 @@ if __name__ == "__main__":
 
     with open(ds_filename, "rb") as f:
         ds = pickle.load(f)
-        train_set, test_sets, num, categ, preprocessor = ds["train"], ds["test_chunks"], ds["numerical"], ds["categorical"], ds["transform"]
+        train_set, test_sets, num, categ, preprocessor = ds["train"], ds["test_chunks"], ds["numerical"], ds[
+            "categorical"], ds["transform"]
 
     with open(matches_filename, "rb") as f:
         matches_obj = pickle.load(f)
@@ -48,11 +48,19 @@ if __name__ == "__main__":
         matches = matches_obj["matches_train"]
         matches_ts_list = matches_obj["matches_batches"]
 
+    # output_dir = os.path.join(ckpt_dir, f"{args.checkpoint}-{args.metric}-noise-{args.frac_noise:.2f}")
+    # os.makedirs(output_dir, exist_ok=True)
     output_dir = os.path.join(ckpt_dir, f"{args.checkpoint}-{args.metric}-noise-{args.frac_noise:.2f}")
     os.makedirs(output_dir, exist_ok=True)
 
-    for target_sg in matches.fi.itemsets.sample(n=args.n_targets):
-        sg = tuple(target_sg)
+    rng = np.random.default_rng(42)
+
+    for target_sg in matches.fi.itemsets.sample(n=args.n_targets, random_state=42):
+        # sg = tuple(target_sg)
+        # outfile = os.path.join(output_dir, f"target-{'-'.join(map(str, sorted(sg)))}.pkl")
+        # print("Target", sg, "output", outfile)
+
+        sg = tuple(sorted(int(v) for v in target_sg))
         outfile = os.path.join(output_dir, f"target-{'-'.join(map(str, sorted(sg)))}.pkl")
         print("Target", sg, "output", outfile)
 
@@ -60,7 +68,8 @@ if __name__ == "__main__":
         noise_fracs = np.zeros(n_batches)
 
         assert args.start_noise + args.transitory < n_batches
-        noise_fracs[args.start_noise:args.start_noise+args.transitory] = np.linspace(0, args.frac_noise, args.transitory)
+        noise_fracs[args.start_noise:args.start_noise + args.transitory] = np.linspace(0, args.frac_noise,
+                                                                                       args.transitory)
         noise_fracs[args.start_noise + args.transitory:] = args.frac_noise
 
         accuracies = []
@@ -73,14 +82,11 @@ if __name__ == "__main__":
         samples = [None] * len(test_sets)
 
         for pos, (ts, noise_frac, matches_ts, df_ohe) in enumerate(zip(test_sets, noise_fracs, matches_ts_list, df_tests)):
-
-            metadata = []
-
             y_pred = xgb.predict(preprocessor.transform(ts.drop(columns=["target"])))
             y_true = np.copy(ts["target"].values)
 
             mask = df_ohe.values[:, list(target_sg)].sum(axis=1) == len(target_sg)
-            mask_noise = np.random.random(len(y_true)) < noise_frac
+            mask_noise = rng.random(len(y_true)) < noise_frac
             if (mask & mask_noise).sum() > 0:
                 y_true[mask & mask_noise] = 1 - y_true[mask & mask_noise]
             num_altered = (mask & mask_noise).sum()
@@ -106,5 +112,6 @@ if __name__ == "__main__":
                 "y_trues": y_trues,
                 "y_preds": y_preds,
                 "noise_fracs": noise_fracs,
-                "altered": altered
+                "altered": altered,
+                "matches_batches": matches_ts_list,
             }, f)

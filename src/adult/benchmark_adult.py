@@ -20,7 +20,7 @@ This script:
 - runs pipeline stages via subprocess
 - records runtime, CPU time, memory, artifact sizes, file counts
 - summarizes support bucket coverage in sup-wise outputs
-- saves CSV, JSON, plots, and terminal summary tables
+- saves CSV, plots, and terminal summary tables
 
 Notes:
 - This is a benchmark/evaluation harness, not a strict unit test.
@@ -32,9 +32,6 @@ Notes:
 from __future__ import annotations
 
 import argparse
-import csv
-import json
-import math
 import os
 import pickle
 import re
@@ -42,8 +39,7 @@ import shutil
 import subprocess
 import sys
 import time
-import tracemalloc
-from collections import defaultdict, Counter
+from collections import Counter
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from statistics import mean, stdev
@@ -763,8 +759,6 @@ def flatten_results(results: List[StageResult]) -> pd.DataFrame:
         if r.ranking_metrics:
             for k, v in r.ranking_metrics.items():
                 row[f"ranking_{k}"] = v
-        row["support_bucket_summary_json"] = json.dumps(r.support_bucket_summary or {})
-        row["artifact_paths_json"] = json.dumps(r.artifact_paths)
         row.pop("support_bucket_summary", None)
         row.pop("artifact_paths", None)
         row.pop("ranking_metrics", None)
@@ -975,18 +969,11 @@ def main() -> None:
                         })
 
     # Save manifest
-    manifest_path = output_dir / "run_manifest.json"
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest_rows, f, indent=2)
 
     # Save flat results
     results_df = flatten_results(all_results)
     results_csv = output_dir / "benchmark_results.csv"
-    results_json = output_dir / "benchmark_results.json"
     results_df.to_csv(results_csv, index=False)
-
-    with open(results_json, "w", encoding="utf-8") as f:
-        json.dump(results_df.to_dict(orient="records"), f, indent=2)
 
     # Summary tables
     success_df = results_df[results_df["success"] == True].copy()
@@ -1046,9 +1033,7 @@ def main() -> None:
 
     print()
     print(f"Saved results to: {output_dir}")
-    print(f"Manifest: {manifest_path}")
     print(f"CSV: {results_csv}")
-    print(f"JSON: {results_json}")
 
 
 if __name__ == "__main__":

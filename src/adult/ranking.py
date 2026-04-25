@@ -194,11 +194,6 @@ def window_scores(metric_mat, altered_frac_mat, win_size=5):
         ref = metric_mat[end - 2 * win_size + 1 : end - win_size + 1, :]
         cur = metric_mat[end - win_size + 1 : end + 1, :]
 
-        print(
-            f"{name}: len(divs)={len(payload['divs'])}, "
-            f"len(altered)={len(payload['altered'])}, "
-            f"len(matches_batches)={len(matches_batches)}"
-        )
         gt_cur = altered_frac_mat[end - win_size + 1 : end + 1, :]
 
         ref_mean = np.nanmean(ref, axis=0)
@@ -258,12 +253,14 @@ def compute_table_rows(all_GT, all_delta, all_tstat, compute_corr=False):
             gt_centered = all_GT - all_GT.mean(axis=1, keepdims=True)
             ys_centered = y_score - y_score.mean(axis=1, keepdims=True)
             denom = all_GT.std(axis=1) * y_score.std(axis=1)
+            # Pearson
             pearson = np.divide(
                 (gt_centered * ys_centered).mean(axis=1),
                 denom,
                 out=np.zeros_like(denom),
                 where=denom > 0
             )
+            pearson = np.nan_to_num(pearson, nan=0.0, posinf=0.0, neginf=0.0)
             table[("Pearson", method)] = f"{pearson.mean():.4f} ± {pearson.std():.4f}"
 
             # Spearman
@@ -271,6 +268,7 @@ def compute_table_rows(all_GT, all_delta, all_tstat, compute_corr=False):
             # extract diagonal cross-block
             n = all_GT.shape[0]
             spearman = np.diagonal(sp, offset=n)
+            spearman = np.nan_to_num(spearman, nan=0.0, posinf=0.0, neginf=0.0)
             table[("Spearman", method)] = f"{spearman.mean():.4f} ± {spearman.std():.4f}"
 
     return table
@@ -329,7 +327,11 @@ for path in files:
 
     with open(path, "rb") as f:
         payload = pickle.load(f)
-
+    print(
+        f"{name}: len(divs)={len(payload['divs'])}, "
+        f"len(altered)={len(payload['altered'])}, "
+        f"len(matches_batches)={len(matches_batches)}"
+    )
     target_sg = normalize_itemset(payload["subgroup"])
 
     if source_mode == "supwise":
@@ -426,7 +428,21 @@ summary = compute_table_rows(
 )
 
 df = pd.DataFrame({"adult": summary}).sort_index(level=(0, 1))
-print(df.to_latex())
+
+out_dir = Path(ROOT) / "report-metrics"
+out_dir.mkdir(parents=True, exist_ok=True)
+
+csv_path = out_dir / f"{checkpoint}_ranking_results.csv"
+txt_path = out_dir / f"{checkpoint}_ranking_results.txt"
+
+df.to_csv(csv_path)
+
+with open(txt_path, "w", encoding="utf-8") as f:
+    f.write(df.to_string())
+
+print(df)
+print(f"\nSaved CSV to: {csv_path}")
+print(f"Saved TXT to: {txt_path}")
 
 
 
